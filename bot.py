@@ -130,7 +130,7 @@ class Bot:
 
 		return int(available_units[1:available_units.index(")")])
 
-	def send_attack_if_enough_units(self, village, unit_type):
+	def send_attack(self, village, unit_type):
 		self.stop_if_captcha()
 
 		attack_units = 0
@@ -141,65 +141,77 @@ class Bot:
 			attack_units = self.base_spears * village.get_unit_multiplier()
 
 		try:
-			if attack_units < 0:
-				self.u.print_with_time_stamp("!!!! Village with too many points: {}({}) !!!!".format(village.get_coords(), village.get_points()))
-			elif attack_units == 0:
-				self.print_with_time_stamp("Error calculating attack units for {}".format(unit_type))
-			elif attack_units <= self.get_available_units(unit_type):
+			if self.get_available_units("scout") > 5:
+				self.move_to_and_click_on_by_id("unit_input_spy")
+				self.browser.find_element_by_id("unit_input_spy").send_keys("1")
+				sleep(self.u.get_random_float(0.2,0.5))
 
-				if self.get_available_units("scout") > 5:
-					self.move_to_and_click_on_by_id("unit_input_spy")
-					self.browser.find_element_by_id("unit_input_spy").send_keys("1")
+			if unit_type == "spear":
+				if self.get_available_units("sword") > self.base_swords * village.get_unit_multiplier():
+					self.move_to_and_click_on_by_id("unit_input_sword")
+					self.browser.find_element_by_id("unit_input_sword").send_keys(str(self.base_swords * village.get_unit_multiplier()))
 					sleep(self.u.get_random_float(0.2,0.5))
-
-				if unit_type == "spear":
-					if self.get_available_units("sword") > self.base_swords * village.get_unit_multiplier():
-						self.move_to_and_click_on_by_id("unit_input_sword")
-						self.browser.find_element_by_id("unit_input_sword").send_keys(str(self.base_swords * village.get_unit_multiplier()))
-						sleep(self.u.get_random_float(0.2,0.5))
-					self.move_to_and_click_on_by_id("unit_input_spear")
-					self.browser.find_element_by_id("unit_input_spear").send_keys(str(attack_units))
-					sleep(self.u.get_random_float(0.2,0.5))
-				elif unit_type == "lc":
-					self.move_to_and_click_on_by_id("unit_input_light")
-					self.browser.find_element_by_id("unit_input_light").send_keys(str(attack_units))
-					sleep(self.u.get_random_float(0.5,1))
-					
-				self.move_to_and_click_on_by_name("input")
-				self.browser.find_element_by_name("input").send_keys(village.get_coords())
-				sleep(self.u.get_random_float(1,2))
-				self.move_to_and_click_on_by_id("target_attack")
-				self.u.print_with_time_stamp("Sent {} {} to attack {}({})".format(attack_units, unit_type, village.get_coords(), village.get_points()))
-				sleep(self.u.get_random_float(2,3))
-				self.move_to_and_click_on_by_id("troop_confirm_go")
-				self.u.print_with_time_stamp("Confirmed attack")
-				sleep(self.u.get_random_float(2,3))
-			else:
-				self.u.print_with_time_stamp("Not enough units to attack")
-				self.u.sleep_for_minutes(5)
-				self.send_attack_if_enough_units(village, unit_type)
+				self.move_to_and_click_on_by_id("unit_input_spear")
+				self.browser.find_element_by_id("unit_input_spear").send_keys(str(attack_units))
+				sleep(self.u.get_random_float(0.2,0.5))
+			elif unit_type == "lc":
+				self.move_to_and_click_on_by_id("unit_input_light")
+				self.browser.find_element_by_id("unit_input_light").send_keys(str(attack_units))
+				sleep(self.u.get_random_float(0.5,1))
+				
+			self.move_to_and_click_on_by_name("input")
+			self.browser.find_element_by_name("input").send_keys(village.get_coords())
+			sleep(self.u.get_random_float(1,2))
+			self.move_to_and_click_on_by_id("target_attack")
+			self.u.print_with_time_stamp("Sent {} {} to attack {}({})".format(attack_units, unit_type, village.get_coords(), village.get_points()))
+			sleep(self.u.get_random_float(2,3))
+			self.move_to_and_click_on_by_id("troop_confirm_go")
+			self.u.print_with_time_stamp("Confirmed attack")
+			sleep(self.u.get_random_float(2,3))
 		except:
 			self.go_to_meeting_place()
 		return
 
+	def enough_units(self, village, unit_type):
+		attack_units = 0
+
+		if unit_type == "lc":
+			attack_units = self.baseLC * village.get_unit_multiplier()
+		elif unit_type == "spear":
+			attack_units = self.base_spears * village.get_unit_multiplier()
+
+		return attack_units > 0 and attack_units <= self.get_available_units(unit_type)
+
 	def farm_villages(self, player_village, unit_type):
+		count = 0
 		self.current_village = player_village
 		first_village_run_at = datetime.datetime.now()
 
 		for village in self.current_village.villages_to_farm:
-			self.stop_if_captcha()
-			sleep(self.u.get_random_float(1,2))
-			current_url = self.browser.current_url
+			count += 1
 
-			if current_url != self.meeting_place_URL.format(self.world.id, self.current_village.village_id) and current_url != self.secondary_meeting_place_URL.format(self.world.id, self.current_village.village_id):
-				self.go_to_meeting_place()
+			if count <= 50:
+				self.stop_if_captcha()
+				sleep(self.u.get_random_float(1,2))
+				current_url = self.browser.current_url
 
-			if (datetime.datetime.now() - first_village_run_at) > datetime.timedelta(minutes=40):
-				self.u.print_with_time_stamp("Going to next village")
-				return
-				#self.farm_villages(unit_type)
+				if current_url != self.meeting_place_URL.format(self.world.id, self.current_village.village_id) and current_url != self.secondary_meeting_place_URL.format(self.world.id, self.current_village.village_id):
+					self.go_to_meeting_place()
+
+				if (datetime.datetime.now() - first_village_run_at) > datetime.timedelta(minutes=40):
+					self.u.print_with_time_stamp("40 minute timeout")
+					self.u.print_with_time_stamp("Going to next village")
+					return
+					#self.farm_villages(unit_type)
+				else if enough_units(village, unit_type):
+					self.send_attack(village, unit_type)
+				else:
+					self.u.print_with_time_stamp("Not enough units to attack")
+					self.u.print_with_time_stamp("Going to next village")
+					return
 			else:
-				self.send_attack_if_enough_units(village, unit_type)
+				self.u.print_with_time_stamp("50 villages farmed")
+				self.u.print_with_time_stamp("Going to next village")
 
 		self.u.print_with_time_stamp("Complete run-through of all villages")
 		self.u.print_with_time_stamp("Going to next village")
