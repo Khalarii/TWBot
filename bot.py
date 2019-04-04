@@ -212,6 +212,7 @@ class Bot:
 			else:
 				self.u.print_with_time_stamp("50 villages farmed")
 				self.u.print_with_time_stamp("Going to next village")
+				return
 
 		self.u.print_with_time_stamp("Complete run-through of all villages")
 		self.u.print_with_time_stamp("Going to next village")
