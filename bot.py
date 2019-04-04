@@ -199,7 +199,7 @@ class Bot:
 				self.u.print_with_time_stamp("Going to next village")
 				return
 				#self.farm_villages(unit_type)
-			else if enough_units(village, unit_type):
+			elif self.enough_units(village, unit_type):
 				self.send_attack(village, unit_type)
 			else:
 				self.u.print_with_time_stamp("Not enough units to attack")
