@@ -8,7 +8,7 @@ bot.login("Kimgss", "^8@Ku*N6P8WJm7a2*yet")
 bot.go_to_meeting_place()
 
 while (True):
-	first_village_run_at = datetime.datetime.now()
+	#first_village_run_at = datetime.datetime.now()
 	for village in world_94.village_list:
-		bot.farm_villages(village, "lc")
-	bot.u.sleep_for_minutes(40 - int((datetime.datetime.now() - first_village_run_at).total_seconds() // 60))
+		bot.farm_villages(village, "lc", False)
+	#bot.u.sleep_for_minutes(40 - int((datetime.datetime.now() - first_village_run_at).total_seconds() // 60))

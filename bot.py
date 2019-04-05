@@ -182,7 +182,7 @@ class Bot:
 
 		return attack_units > 0 and attack_units <= self.get_available_units(unit_type)
 
-	def farm_villages(self, player_village, unit_type):
+	def farm_villages(self, player_village, unit_type, dont_wait):
 		self.current_village = player_village
 		first_village_run_at = datetime.datetime.now()
 
@@ -197,17 +197,19 @@ class Bot:
 			if (datetime.datetime.now() - first_village_run_at) > datetime.timedelta(minutes=40):
 				self.u.print_with_time_stamp("40 minute timeout")
 				self.u.print_with_time_stamp("Going to next village")
-				return
+				return False
 				#self.farm_villages(unit_type)
 			elif self.enough_units(village, unit_type):
 				self.send_attack(village, unit_type)
 			else:
 				self.u.print_with_time_stamp("Not enough units to attack")
-				self.u.print_with_time_stamp("Going to next village")
-				return
+				if dont_wait:
+					self.u.print_with_time_stamp("Going to next village")
+					return False
+				self.u.sleep_for_minutes(5)
 
 		self.u.print_with_time_stamp("Complete run-through of all villages")
 		self.u.print_with_time_stamp("Going to next village")
 		#self.u.sleep_for_minutes(40 - int((datetime.datetime.now() - first_village_run_at).total_seconds() // 60))
 		#self.farm_villages(unit_type)
-		return
+		return True
