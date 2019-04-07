@@ -182,9 +182,9 @@ class Bot:
 
 		return attack_units > 0 and attack_units <= self.get_available_units(unit_type)
 
-	def farm_villages(self, player_village, unit_type, dont_wait):
+	def farm_villages(self, player_village, unit_type, first_village_run_at, first_run):
 		self.current_village = player_village
-		first_village_run_at = datetime.datetime.now()
+		this_village_run_at = datetime.datetime.now()
 
 		for village in self.current_village.villages_to_farm:
 			self.stop_if_captcha()
@@ -194,22 +194,22 @@ class Bot:
 			if current_url != self.meeting_place_URL.format(self.world.id, self.current_village.village_id) and current_url != self.secondary_meeting_place_URL.format(self.world.id, self.current_village.village_id):
 				self.go_to_meeting_place()
 
-			if (datetime.datetime.now() - first_village_run_at) > datetime.timedelta(minutes=40):
+			if (datetime.datetime.now() - this_village_run_at) > datetime.timedelta(minutes=40):
 				self.u.print_with_time_stamp("40 minute timeout")
 				self.u.print_with_time_stamp("Going to next village")
-				return False
+				return
 				#self.farm_villages(unit_type)
 			elif self.enough_units(village, unit_type):
 				self.send_attack(village, unit_type)
 			else:
 				self.u.print_with_time_stamp("Not enough units to attack")
-				if dont_wait:
+				if (datetime.datetime.now() - first_village_run_at) > datetime.timedelta(minutes=40) or first_run:
 					self.u.print_with_time_stamp("Going to next village")
-					return False
+					return
 				self.u.sleep_for_minutes(5)
 
 		self.u.print_with_time_stamp("Complete run-through of all villages")
 		self.u.print_with_time_stamp("Going to next village")
 		#self.u.sleep_for_minutes(40 - int((datetime.datetime.now() - first_village_run_at).total_seconds() // 60))
 		#self.farm_villages(unit_type)
-		return True
+		return
