@@ -6,9 +6,7 @@ from selenium import webdriver
 #from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from village import *
-from util import *
 from time import sleep
-import datetime
 from world import *
 from player_village import *
 
@@ -182,34 +180,41 @@ class Bot:
 
 		return attack_units > 0 and attack_units <= self.get_available_units(unit_type)
 
-	def farm_villages(self, player_village, unit_type, first_village_run_at, first_run):
+	def not_in_meeting_place(self, current_url):
+		return current_url != self.meeting_place_URL.format(self.world.id, self.current_village.village_id) and current_url != self.secondary_meeting_place_URL.format(self.world.id, self.current_village.village_id)
+
+	def farm_villages(self, player_village):
 		self.current_village = player_village
-		this_village_run_at = datetime.datetime.now()
+		loop_started = datetime.datetime.now()
 
-		for village in self.current_village.villages_to_farm:
+		for i in range(0,35):
 			self.stop_if_captcha()
-			sleep(self.u.get_random_float(1,2))
-			current_url = self.browser.current_url
+			village = self.current_village.villages_to_farm[player_village.current_index]
 
-			if current_url != self.meeting_place_URL.format(self.world.id, self.current_village.village_id) and current_url != self.secondary_meeting_place_URL.format(self.world.id, self.current_village.village_id):
+			sleep(self.u.get_random_float(1,2))
+
+			if self.not_in_meeting_place(self.browser.current_url):
 				self.go_to_meeting_place()
 
-			if (datetime.datetime.now() - this_village_run_at) > datetime.timedelta(minutes=40):
-				self.u.print_with_time_stamp("40 minute timeout")
+			if (datetime.datetime.now() - player_village.first_village_run_at) > datetime.timedelta(minutes=20):
+				self.u.print_with_time_stamp("20 minute loop timeout")
 				self.u.print_with_time_stamp("Going to next village")
 				return
-				#self.farm_villages(unit_type)
-			elif self.enough_units(village, unit_type):
-				self.send_attack(village, unit_type)
+
+			if (datetime.datetime.now() - player_village.first_village_run_at) > datetime.timedelta(minutes=30):
+				self.u.print_with_time_stamp("30 minute first village timeout")
+				self.u.print_with_time_stamp("Resetting index")
+				player_village.current_index = -1
+				player_village.first_village_run_at = datetime.datetime.now()
+
+			if self.enough_units(village, player_village.unit_type):
+				self.send_attack(village, player_village.unit_type)
 			else:
 				self.u.print_with_time_stamp("Not enough units to attack")
-				if (datetime.datetime.now() - first_village_run_at) > datetime.timedelta(minutes=40) or first_run:
-					self.u.print_with_time_stamp("Going to next village")
-					return
 				self.u.sleep_for_minutes(5)
 
-		self.u.print_with_time_stamp("Complete run-through of all villages")
+			player_village.current_index+=1
+
+		self.u.print_with_time_stamp("Complete run-through of batch")
 		self.u.print_with_time_stamp("Going to next village")
-		#self.u.sleep_for_minutes(40 - int((datetime.datetime.now() - first_village_run_at).total_seconds() // 60))
-		#self.farm_villages(unit_type)
 		return
