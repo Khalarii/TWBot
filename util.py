@@ -36,7 +36,7 @@ class Util():
 			info = self.get_points_for_village(x,y)
 			points = int(info[0])
 			name = info[1]
-			if points > 0 and points < 300 and ((my_points/points < 20) or (name == "Aldeia+de+b%C3%A1rbaros" or name == "Aldeia-bonus")): villages.append(Village(x,y,points))
+			if points > 0 and points < 500 and ((my_points/points < 20) or (name == "Aldeia+de+b%C3%A1rbaros" or name == "Aldeia-bonus")): villages.append(Village(x,y,points))
 		return villages
 
 	def get_random_float(self,start,end):

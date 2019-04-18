@@ -139,10 +139,6 @@ class Bot:
 			attack_units = self.base_spears * village.get_unit_multiplier()
 
 		try:
-			if self.get_available_units("scout") > 5:
-				self.move_to_and_click_on_by_id("unit_input_spy")
-				self.browser.find_element_by_id("unit_input_spy").send_keys("1")
-				sleep(self.u.get_random_float(0.2,0.5))
 
 			if unit_type == "spear":
 				if self.get_available_units("sword") > self.base_swords * village.get_unit_multiplier():
@@ -189,6 +185,8 @@ class Bot:
 
 		for i in range(0,35):
 			self.stop_if_captcha()
+			if player_village.current_index == len(self.current_village.villages_to_farm):
+				player_village.current_index = 0
 			village = self.current_village.villages_to_farm[player_village.current_index]
 
 			sleep(self.u.get_random_float(1,2))
@@ -196,7 +194,7 @@ class Bot:
 			if self.not_in_meeting_place(self.browser.current_url):
 				self.go_to_meeting_place()
 
-			if (datetime.datetime.now() - player_village.first_village_run_at) > datetime.timedelta(minutes=20):
+			if (datetime.datetime.now() - loop_started) > datetime.timedelta(minutes=20):
 				self.u.print_with_time_stamp("20 minute loop timeout")
 				self.u.print_with_time_stamp("Going to next village")
 				return

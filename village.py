@@ -12,8 +12,8 @@ class Village:
 
 	def get_unit_multiplier(self):
 		multiplier = -1
+		if self.points < 500:
+			multiplier = 30
 		if self.points < 300:
 			multiplier = 20
-		if self.points < 250:
-			multiplier = 15
 		return multiplier
