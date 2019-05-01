@@ -7,23 +7,19 @@ from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from village import *
 from time import sleep
-from world import *
 from player_village import *
 
 class Bot:
-	def __init__(self, world):
+	def __init__(self, world, first_village):
 		self.baseLC = 1
 		self.base_spears = 4
 		self.base_swords = 4
-		self.village_list = world.village_list
-		self.current_village = self.village_list[0]
-		self.village_id = self.current_village.village_id
+		self.current_village = first_village
 		self.meeting_place_URL = "https://br{}.tribalwars.com.br/game.php?village={}&screen=place"
 		self.secondary_meeting_place_URL = "https://br{}.tribalwars.com.br/game.php?screen=place&village={}"
-		self.u = Util(world.id)
+		self.u = Util(world)
 		self.browser = webdriver.Firefox(executable_path="./geckodriver")
-		self.browser.implicitly_wait(10)
-		self.unsupervised = False
+		self.browser.implicitly_wait(30)
 		self.world = world
 
 	def captcha_visible(self):
@@ -39,14 +35,10 @@ class Bot:
 		return captcha_visible
 
 	def stop_if_captcha(self):
-		while self.captcha_visible():
-			if self.unsupervised:
-				pass
-				#import os
-				#os.system("shutdown now -h")
-			else:
-				self.u.print_with_time_stamp("Captcha identified")
-				self.u.sleep_for_minutes(1)
+		if self.captcha_visible():
+			self.u.print_with_time_stamp("Captcha identified")
+			while self.captcha_visible():
+				sleep(1)
 		return
 
 	def run(self):
@@ -82,8 +74,8 @@ class Bot:
 		self.move_to_and_click_on_by_class("btn-login")
 		self.u.print_with_time_stamp("Logged in")
 		sleep(self.u.get_random_float(2,3))
-		self.u.print_with_time_stamp("Going to world {}".format(self.world.id))
-		self.browser.get("https://tribalwars.com.br/page/play/br{}".format(self.world.id))
+		self.u.print_with_time_stamp("Going to world {}".format(self.world))
+		self.browser.get("https://tribalwars.com.br/page/play/br{}".format(self.world))
 		sleep(self.u.get_random_float(2,3))
 		return
 
@@ -94,20 +86,23 @@ class Bot:
 
 	def go_to_meeting_place(self):
 		if self.browser.current_url == "https://www.tribalwars.com.br/?session_expired=1":
-			self.browser.get("https://tribalwars.com.br/page/play/br{}".format(self.world.id))
+			self.browser.get("https://tribalwars.com.br/page/play/br{}".format(self.world))
 			sleep(self.u.get_random_float(1,2))
+		self.stop_if_captcha()
 		self.u.print_with_time_stamp("Directing to villages overview")
-		self.browser.get("https://br{}.tribalwars.com.br/game.php?village={}&screen=overview_villages".format(self.world.id, self.current_village.village_id))
+		self.browser.get("https://br{}.tribalwars.com.br/game.php?village={}&screen=overview_villages".format(self.world, self.current_village.village_id))
 		sleep(self.u.get_random_float(1,2))
 		self.u.print_with_time_stamp("Directing to overview")
-		self.browser.get("https://br{}.tribalwars.com.br/game.php?village={}&screen=overview".format(self.world.id, self.current_village.village_id))
+		self.browser.get("https://br{}.tribalwars.com.br/game.php?village={}&screen=overview".format(self.world, self.current_village.village_id))
 		sleep(self.u.get_random_float(1,2))
+		self.stop_if_captcha()
 		self.u.print_with_time_stamp("Directing to meeting place")
-		self.browser.get(self.meeting_place_URL.format(self.world.id, self.current_village.village_id))
+		self.browser.get(self.meeting_place_URL.format(self.world, self.current_village.village_id))
 		sleep(self.u.get_random_float(1,2))
 		return
 
 	def go_to_main_village(self):
+		self.stop_if_captcha()
 		self.u.print_with_time_stamp("Directing to main village screen")
 		self.move_to_and_click_on_by_id("ds_body")
 		self.browser.find_element_by_id("ds_body").send_keys("v")
@@ -177,7 +172,7 @@ class Bot:
 		return attack_units > 0 and attack_units <= self.get_available_units(unit_type)
 
 	def not_in_meeting_place(self, current_url):
-		return current_url != self.meeting_place_URL.format(self.world.id, self.current_village.village_id) and current_url != self.secondary_meeting_place_URL.format(self.world.id, self.current_village.village_id)
+		return current_url != self.meeting_place_URL.format(self.world, self.current_village.village_id) and current_url != self.secondary_meeting_place_URL.format(self.world, self.current_village.village_id)
 
 	def farm_villages(self, player_village):
 		self.current_village = player_village
