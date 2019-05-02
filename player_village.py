@@ -2,6 +2,7 @@ from util import *
 class PlayerVillage:
 	def __init__(self, world_id, village_id, my_coordinates, coordinates_to_farm):
 		u = Util(world_id)
+		u.print_with_time_stamp("Setting up village {}".format(village_id))
 		self.points = 0
 		for coordinates in my_coordinates:
 			self.points += int(u.get_points_for_village(coordinates[0], coordinates[1])[0])

@@ -27,6 +27,12 @@ class Util():
 				return [v_info[5], v_info[1]]
 		return ["-1", ""]
 
+	def is_barbarian(self, name):
+		return name == "Aldeia+de+b%C3%A1rbaros" or name == "Aldeia-bonus"
+
+	def can_attack(self, my_points, target_points, target_name):
+		return target_points > 0 and target_points < 800 and self.is_barbarian(target_name)
+
 	def get_villages_to_farm(self, my_points, coordinates):
 		villages = []
 
@@ -36,7 +42,7 @@ class Util():
 			info = self.get_points_for_village(x,y)
 			points = int(info[0])
 			name = info[1]
-			if points > 0 and points < 500 and ((my_points/points < 20) or (name == "Aldeia+de+b%C3%A1rbaros" or name == "Aldeia-bonus")): villages.append(Village(x,y,points))
+			if self.can_attack(my_points, points, name): villages.append(Village(x,y,points))
 		return villages
 
 	def get_random_float(self,start,end):
