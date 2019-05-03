@@ -178,10 +178,17 @@ class Bot:
 		self.current_village = player_village
 		loop_started = datetime.datetime.now()
 
-		for i in range(0,35):
+		while True:
 			self.stop_if_captcha()
-			if player_village.current_index == len(self.current_village.villages_to_farm):
+
+			if (datetime.datetime.now() - player_village.first_village_run_at) > datetime.timedelta(minutes=30):
+				self.u.print_with_time_stamp("30 minute first village timeout")
+				self.u.print_with_time_stamp("Resetting index")
 				player_village.current_index = 0
+				player_village.first_village_run_at = datetime.datetime.now()
+			elif player_village.current_index == len(self.current_village.villages_to_farm):
+				player_village.current_index = 0
+
 			village = self.current_village.villages_to_farm[player_village.current_index]
 
 			sleep(self.u.get_random_float(1,2))
@@ -189,25 +196,16 @@ class Bot:
 			if self.not_in_meeting_place(self.browser.current_url):
 				self.go_to_meeting_place()
 
-			if (datetime.datetime.now() - loop_started) > datetime.timedelta(minutes=20):
-				self.u.print_with_time_stamp("20 minute loop timeout")
-				self.u.print_with_time_stamp("Going to next village")
-				return
+			while not self.enough_units(village, player_village.unit_type):
+				if (datetime.datetime.now() - loop_started) > datetime.timedelta(minutes=5):
+					self.u.print_with_time_stamp("5 minute loop timeout")
+					self.u.print_with_time_stamp("Going to next village")
+					return
+				else:
+					self.u.print_with_time_stamp("Not enough units to attack")
+					self.u.sleep_for_minutes(1)
 
-			if (datetime.datetime.now() - player_village.first_village_run_at) > datetime.timedelta(minutes=30):
-				self.u.print_with_time_stamp("30 minute first village timeout")
-				self.u.print_with_time_stamp("Resetting index")
-				player_village.current_index = -1
-				player_village.first_village_run_at = datetime.datetime.now()
 
-			if self.enough_units(village, player_village.unit_type):
-				self.send_attack(village, player_village.unit_type)
-			else:
-				self.u.print_with_time_stamp("Not enough units to attack")
-				self.u.sleep_for_minutes(5)
-
+			self.send_attack(village, player_village.unit_type)
 			player_village.current_index+=1
-
-		self.u.print_with_time_stamp("Complete run-through of batch")
-		self.u.print_with_time_stamp("Going to next village")
 		return
