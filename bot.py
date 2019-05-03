@@ -181,13 +181,15 @@ class Bot:
 		while True:
 			self.stop_if_captcha()
 
-			if (datetime.datetime.now() - player_village.first_village_run_at) > datetime.timedelta(minutes=30):
-				self.u.print_with_time_stamp("30 minute first village timeout")
-				self.u.print_with_time_stamp("Resetting index")
+			if player_village.current_index == len(self.current_village.villages_to_farm):
+				player_village.current_index = 0
+				if (datetime.datetime.now() - player_village.first_village_run_at) < datetime.timedelta(minutes=30)
+					self.u.print_with_time_stamp("All villages done")
+					self.u.print_with_time_stamp("Going to next village")
+					return
+			elif (datetime.datetime.now() - player_village.first_village_run_at) > datetime.timedelta(minutes=30):
 				player_village.current_index = 0
 				player_village.first_village_run_at = datetime.datetime.now()
-			elif player_village.current_index == len(self.current_village.villages_to_farm):
-				player_village.current_index = 0
 
 			village = self.current_village.villages_to_farm[player_village.current_index]
 
