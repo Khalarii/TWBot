@@ -36,7 +36,9 @@ class Bot:
 
 	def stop_if_captcha(self):
 		if self.captcha_visible():
-			self.u.print_with_time_stamp("Captcha identified")
+			self.u.print_with_time_stamp(" ------------------------------------")
+			self.u.print_with_time_stamp("|XXXX     Captcha identified     XXXX|")
+			self.u.print_with_time_stamp(" ------------------------------------")
 			while self.captcha_visible():
 				sleep(1)
 		return
